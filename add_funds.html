@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}شحن الرصيد - {{ site_name }}{% endblock %}
+{% block content %}
+<h1>شحن الرصيد</h1>
+<p class="sub">حوّل المبلغ بإحدى الطرق المتاحة، وبعدها سجّل العملية هنا وهنراجعها ونضيف الرصيد.</p>
+
+<div class="grid g2">
+  <div class="card">
+    <h2>1) حوّل المبلغ</h2>
+    <div class="info" style="margin-top:0">{{ S.payment_instructions }}</div>
+    <p class="hint mt">أقل مبلغ للشحن: {{ S.min_deposit }} {{ currency }}</p>
+  </div>
+  <div class="card">
+    <h2>2) سجّل العملية</h2>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="amount">المبلغ ({{ currency }})</label>
+      <input id="amount" name="amount" type="number" step="0.01" min="1" required>
+      <label for="method">طريقة الدفع</label>
+      <select id="method" name="method" required>
+        <option value="فودافون كاش">فودافون كاش</option>
+        <option value="إنستاباي">إنستاباي</option>
+        <option value="تحويل بنكي">تحويل بنكي</option>
+        <option value="أخرى">أخرى</option>
+      </select>
+      <label for="reference">رقم العملية / رقم المحفظة اللي حوّلت منها</label>
+      <input id="reference" name="reference" required minlength="4" maxlength="80" dir="ltr">
+      <button class="btn block mt" type="submit">إرسال طلب الشحن</button>
+    </form>
+  </div>
+</div>
+
+<h2 class="mt">سجل الشحن</h2>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th><th>المرجع</th><th>الحالة</th></tr></thead>
+    <tbody>
+    {% for d in deposits %}
+      <tr>
+        <td>{{ d['id'] }}</td><td>{{ d['created_at']|dt }}</td>
+        <td>{{ d['amount']|money }}</td><td>{{ d['method'] }}</td>
+        <td class="link">{{ d['reference'] }}</td>
+        <td><span class="badge {{ d['status'] }}">{{ {'pending':'قيد المراجعة','approved':'تمت الموافقة','rejected':'مرفوض'}[d['status']] }}</span></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="empty">مفيش عمليات شحن لسه.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

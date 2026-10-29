@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="narrow card" style="text-align:center">
+  <h1>{{ code }}</h1>
+  <p class="sub">{{ msg }}</p>
+  <a class="btn" href="{{ url_for('index') }}">الرئيسية</a>
+</div>
+{% endblock %}

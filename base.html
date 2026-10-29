@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ site_name }}{% endblock %}</title>
+  <meta name="description" content="{{ S.tagline }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="logo" href="{{ url_for('index') }}">⚡ <span>{{ site_name }}</span></a>
+    <nav class="nav">
+      <a href="{{ url_for('services_page') }}" {% if request.endpoint == 'services_page' %}class="active"{% endif %}>الخدمات</a>
+      {% if me %}
+        <a href="{{ url_for('new_order') }}" {% if request.endpoint == 'new_order' %}class="active"{% endif %}>طلب جديد</a>
+        <a href="{{ url_for('orders') }}" {% if request.endpoint == 'orders' %}class="active"{% endif %}>طلباتي</a>
+        <a href="{{ url_for('add_funds') }}" {% if request.endpoint == 'add_funds' %}class="active"{% endif %}>شحن الرصيد</a>
+        {% if me['is_admin'] %}<a href="{{ url_for('admin_dashboard') }}" {% if request.path.startswith('/admin') %}class="active"{% endif %}>لوحة الأدمن</a>{% endif %}
+      {% endif %}
+    </nav>
+    <div class="userbox">
+      {% if me %}
+        <span class="chip">الرصيد: <b>{{ me['balance']|money }}</b> {{ currency }}</span>
+        <a href="{{ url_for('account') }}" class="muted">{{ me['username'] }}</a>
+        <form class="inline" method="post" action="{{ url_for('logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn ghost sm" type="submit">خروج</button>
+        </form>
+      {% else %}
+        <a class="btn ghost sm" href="{{ url_for('login') }}">دخول</a>
+        <a class="btn sm" href="{{ url_for('register') }}">حساب جديد</a>
+      {% endif %}
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      {% if msgs %}
+        <div class="flashes">
+          {% for cat, m in msgs %}<div class="flash {{ cat }}">{{ m }}</div>{% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    © {{ site_name }}
+    {% if S.support_contact %} · للدعم: {{ S.support_contact }}{% endif %}
+  </div>
+</footer>
+</body>
+</html>

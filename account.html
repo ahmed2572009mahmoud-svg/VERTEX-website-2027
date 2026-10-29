@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}حسابي - {{ site_name }}{% endblock %}
+{% block content %}
+<div class="narrow card">
+  <h1>حسابي</h1>
+  <p class="sub">{{ me['username'] }} · {{ me['email'] }}</p>
+  <h2>تغيير كلمة المرور</h2>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="old">كلمة المرور الحالية</label>
+    <input id="old" name="old" type="password" required autocomplete="current-password">
+    <label for="new">كلمة المرور الجديدة</label>
+    <input id="new" name="new" type="password" required minlength="8" autocomplete="new-password">
+    <button class="btn block mt" type="submit">حفظ</button>
+  </form>
+</div>
+{% endblock %}

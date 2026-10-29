@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}طلباتي - {{ site_name }}{% endblock %}
+{% block content %}
+<div class="tools" style="justify-content:space-between">
+  <div><h1>طلباتي</h1></div>
+  <form method="post" action="{{ url_for('orders_refresh') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn ghost sm" type="submit">🔄 تحديث الحالات</button>
+  </form>
+</div>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>#</th><th>التاريخ</th><th>الخدمة</th><th>الرابط</th><th>الكمية</th><th>التكلفة</th><th>الحالة</th></tr></thead>
+    <tbody>
+    {% for o in orders %}
+      <tr>
+        <td>{{ o['id'] }}</td>
+        <td>{{ o['created_at']|dt }}</td>
+        <td>{{ o['service_name'] }}</td>
+        <td class="link" title="{{ o['link'] }}">{{ o['link'] }}</td>
+        <td>{{ o['quantity'] }}{% if o['remains'] is not none and o['status'] in ('partial','in_progress') %}<div class="hint">متبقي {{ o['remains'] }}</div>{% endif %}</td>
+        <td>{{ o['charge']|money }}{% if o['refunded'] %}<div class="hint">اتسترجع {{ o['refunded']|money }}</div>{% endif %}</td>
+        <td><span class="badge {{ o['status'] }}">{{ STATUS_AR.get(o['status'], o['status']) }}</span></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="7" class="empty">لسه معملتش أي طلب. <a href="{{ url_for('new_order') }}">اعمل أول طلب</a></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

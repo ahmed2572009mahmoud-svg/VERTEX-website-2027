@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>زوّد <em>متابعينك</em> وتفاعلك<br>في دقايق</h1>
+  <p>{{ S.tagline }}</p>
+  <div class="cta">
+    {% if me %}
+      <a class="btn" href="{{ url_for('new_order') }}">اطلب دلوقتي</a>
+    {% else %}
+      <a class="btn" href="{{ url_for('register') }}">ابدأ مجاناً</a>
+      <a class="btn ghost" href="{{ url_for('services_page') }}">شوف الخدمات والأسعار</a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="grid g3">
+  <div class="card stat"><div class="n">{{ stats.orders }}</div><div class="l">طلب اتنفّذ</div></div>
+  <div class="card stat"><div class="n">{{ stats.users }}</div><div class="l">عميل</div></div>
+  <div class="card stat"><div class="n">24/7</div><div class="l">استقبال الطلبات</div></div>
+</section>
+
+<section class="grid g3 mt">
+  <div class="card feature"><div class="ic">🚀</div><h3>بدء سريع</h3><p>الطلبات بتتبعت للتنفيذ أوتوماتيك بمجرد تأكيدها.</p></div>
+  <div class="card feature"><div class="ic">💸</div><h3>أسعار واضحة</h3><p>السعر لكل 1000 ظاهر قدامك، وبتدفع بس على اللي بتطلبه.</p></div>
+  <div class="card feature"><div class="ic">🔒</div><h3>من غير كلمة مرور</h3><p>مش بنطلب باسورد حسابك أبداً، الرابط أو اسم الحساب كفاية.</p></div>
+</section>
+
+<section class="mt">
+  <h2>أشهر الخدمات</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>الخدمة</th><th>السعر / 1000</th><th>الحد الأدنى</th><th>الحد الأقصى</th></tr></thead>
+      <tbody>
+      {% for s in services %}
+        <tr><td>{{ s['name'] }}</td><td>{{ s['rate']|money }} {{ currency }}</td><td>{{ s['min_qty'] }}</td><td>{{ s['max_qty'] }}</td></tr>
+      {% else %}
+        <tr><td colspan="4" class="empty">مفيش خدمات حالياً.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="mt"><a href="{{ url_for('services_page') }}">كل الخدمات ←</a></p>
+</section>
+{% endblock %}

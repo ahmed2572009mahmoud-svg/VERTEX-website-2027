@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}حساب جديد - {{ site_name }}{% endblock %}
+{% block content %}
+<div class="narrow card">
+  <h1>إنشاء حساب</h1>
+  <p class="sub">ثواني وتبدأ تطلب.</p>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="username">اسم المستخدم</label>
+    <input id="username" name="username" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+" autocomplete="username" dir="ltr">
+    <div class="hint">حروف إنجليزي وأرقام و _ فقط.</div>
+    <label for="email">البريد الإلكتروني</label>
+    <input id="email" name="email" type="email" required autocomplete="email" dir="ltr">
+    <label for="password">كلمة المرور</label>
+    <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password">
+    <label for="password2">تأكيد كلمة المرور</label>
+    <input id="password2" name="password2" type="password" required minlength="8" autocomplete="new-password">
+    <button class="btn block mt" type="submit">إنشاء الحساب</button>
+  </form>
+  <p class="muted mt">عندك حساب؟ <a href="{{ url_for('login') }}">سجّل دخول</a></p>
+</div>
+{% endblock %}

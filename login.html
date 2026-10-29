@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}دخول - {{ site_name }}{% endblock %}
+{% block content %}
+<div class="narrow card">
+  <h1>تسجيل الدخول</h1>
+  <p class="sub">ادخل بحسابك عشان تطلب وتتابع طلباتك.</p>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="username">اسم المستخدم أو البريد</label>
+    <input id="username" name="username" required autofocus autocomplete="username">
+    <label for="password">كلمة المرور</label>
+    <input id="password" name="password" type="password" required autocomplete="current-password">
+    <button class="btn block mt" type="submit">دخول</button>
+  </form>
+  <p class="muted mt">معندكش حساب؟ <a href="{{ url_for('register') }}">سجّل دلوقتي</a></p>
+</div>
+{% endblock %}

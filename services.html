@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}الخدمات - {{ site_name }}{% endblock %}
+{% block content %}
+<h1>الخدمات والأسعار</h1>
+<p class="sub">الأسعار لكل 1000 وحدة.</p>
+{% for cat, items in grouped.items() %}
+  <h3 class="cat">{{ cat }}</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>الخدمة</th><th>السعر / 1000</th><th>الحد الأدنى</th><th>الحد الأقصى</th></tr></thead>
+      <tbody>
+      {% for s in items %}
+        <tr>
+          <td>{{ s['id'] }}</td>
+          <td>{{ s['name'] }}{% if s['description'] %}<div class="hint">{{ s['description'] }}</div>{% endif %}</td>
+          <td>{{ s['rate']|money }} {{ currency }}</td>
+          <td>{{ s['min_qty'] }}</td>
+          <td>{{ s['max_qty'] }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="card empty">مفيش خدمات متاحة حالياً.</div>
+{% endfor %}
+<p class="mt">
+  {% if me %}<a class="btn" href="{{ url_for('new_order') }}">اطلب دلوقتي</a>
+  {% else %}<a class="btn" href="{{ url_for('register') }}">سجّل واطلب</a>{% endif %}
+</p>
+{% endblock %}

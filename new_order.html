@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}طلب جديد - {{ site_name }}{% endblock %}
+{% block content %}
+<h1>طلب جديد</h1>
+<p class="sub">اختار الخدمة، حط الرابط والكمية، والتكلفة بتظهر فوراً.</p>
+
+{% if not services %}
+  <div class="card empty">مفيش خدمات متاحة حالياً.</div>
+{% else %}
+<div class="grid g2">
+  <div class="card">
+    <form method="post" id="orderForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="category">القسم</label>
+      <select id="category"></select>
+      <label for="service">الخدمة</label>
+      <select id="service" name="service" required></select>
+      <label for="link">الرابط أو اسم الحساب</label>
+      <input id="link" name="link" required maxlength="300" dir="ltr" value="{{ form.get('link', '') }}" placeholder="https://...">
+      <label for="quantity">الكمية</label>
+      <input id="quantity" name="quantity" type="number" required min="1" value="{{ form.get('quantity', '') }}">
+      <div class="hint" id="limits"></div>
+      <div class="total"><span>التكلفة</span><span><b id="cost">0.00</b> {{ currency }}</span></div>
+      <button class="btn block mt" type="submit">تأكيد الطلب</button>
+    </form>
+  </div>
+  <div class="card">
+    <h2>تفاصيل الخدمة</h2>
+    <div id="details" class="muted">اختار خدمة عشان تشوف التفاصيل.</div>
+    <div class="info">
+      • الحساب أو المنشور لازم يكون عام (Public) أثناء التنفيذ.
+      • متغيّرش اسم الحساب ولا تحذف المنشور قبل ما الطلب يخلص.
+      • التكلفة بتتخصم من رصيدك فوراً، وبتترجع تلقائي لو الطلب اتلغى.
+    </div>
+    <p class="mt">رصيدك: <b>{{ me['balance']|money }}</b> {{ currency }} — <a href="{{ url_for('add_funds') }}">شحن الرصيد</a></p>
+  </div>
+</div>
+
+<script>
+(function () {
+  var services = {{ services|tojson }};
+  var wantedService = {{ (form.get('service') or '')|tojson }};
+  var cat = document.getElementById('category');
+  var svc = document.getElementById('service');
+  var qty = document.getElementById('quantity');
+  var cost = document.getElementById('cost');
+  var limits = document.getElementById('limits');
+  var details = document.getElementById('details');
+
+  var cats = [];
+  services.forEach(function (s) { if (cats.indexOf(s.category) === -1) cats.push(s.category); });
+  cats.forEach(function (c) { var o = document.createElement('option'); o.textContent = c; o.value = c; cat.appendChild(o); });
+
+  function current() {
+    var id = parseInt(svc.value, 10);
+    return services.filter(function (s) { return s.id === id; })[0];
+  }
+  function fillServices() {
+    svc.innerHTML = '';
+    services.filter(function (s) { return s.category === cat.value; }).forEach(function (s) {
+      var o = document.createElement('option');
+      o.value = s.id; o.textContent = s.id + ' — ' + s.name + ' — ' + s.rate.toFixed(2) + ' / 1000';
+      svc.appendChild(o);
+    });
+    refresh();
+  }
+  function refresh() {
+    var s = current();
+    if (!s) { return; }
+    qty.min = s.min_qty; qty.max = s.max_qty;
+    limits.textContent = 'الحد الأدنى ' + s.min_qty + ' — الحد الأقصى ' + s.max_qty;
+    details.textContent = '';
+    var t = document.createElement('div');
+    t.innerHTML = '<b></b><div class="hint"></div><p>السعر لكل 1000: <b></b></p>';
+    t.children[0].textContent = s.name;
+    t.children[1].textContent = s.description || '';
+    t.querySelector('p b').textContent = s.rate.toFixed(2) + ' {{ currency }}';
+    details.appendChild(t);
+    var q = parseInt(qty.value, 10);
+    cost.textContent = (q > 0 ? Math.max(s.rate * q / 1000, 0.01) : 0).toFixed(2);
+  }
+  cat.addEventListener('change', fillServices);
+  svc.addEventListener('change', refresh);
+  qty.addEventListener('input', refresh);
+
+  var pre = services.filter(function (s) { return String(s.id) === String(wantedService); })[0];
+  if (pre) { cat.value = pre.category; }
+  fillServices();
+  if (pre) { svc.value = pre.id; refresh(); }
+})();
+</script>
+{% endif %}
+{% endblock %}
