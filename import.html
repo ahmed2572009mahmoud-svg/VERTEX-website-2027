@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}استيراد الخدمات - {{ site_name }}{% endblock %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<div class="narrow card" style="width:min(560px,100%)">
+  <h1>استيراد الخدمات من المزوّد</h1>
+  {% if not provider_ok %}
+    <p class="sub">لازم تضبط رابط ومفتاح المزوّد الأول من <a href="{{ url_for('admin_settings') }}">الإعدادات</a>.</p>
+  {% else %}
+    <p class="sub">بيجيب قايمة خدمات المزوّد ويضيفها بسعرك أنت (سعر المزوّد × سعر الصرف × (1 + نسبة الربح)). الخدمات المستوردة قبل كده بتتحدّث أسعارها فقط.</p>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>سعر الصرف إلى {{ currency }}</label>
+      <input name="fx" type="number" step="0.0001" min="0.0001" required value="{{ S.provider_fx }}">
+      <div class="hint">لو أسعار المزوّد بالدولار، اكتب سعر الدولار بالعملة بتاعتك. لو بنفس عملتك اكتب 1.</div>
+      <label>نسبة الربح %</label>
+      <input name="markup" type="number" step="0.1" min="-50" required value="{{ S.provider_markup }}">
+      <label>فلتر بكلمة (اختياري)</label>
+      <input name="keyword" placeholder="مثال: instagram followers">
+      <div class="hint">استورد خدمات معيّنة بس بدل المئات.</div>
+      <button class="btn block mt" type="submit">استيراد</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

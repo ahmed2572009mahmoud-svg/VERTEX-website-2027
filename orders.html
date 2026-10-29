@@ -1,31 +1,56 @@
 {% extends "base.html" %}
-{% block title %}طلباتي - {{ site_name }}{% endblock %}
+{% block title %}الطلبات - {{ site_name }}{% endblock %}
 {% block content %}
+{% include "admin/_nav.html" %}
 <div class="tools" style="justify-content:space-between">
-  <div><h1>طلباتي</h1></div>
-  <form method="post" action="{{ url_for('orders_refresh') }}">
+  <h1>الطلبات</h1>
+  <form method="post" action="{{ url_for('admin_orders_sync') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button class="btn ghost sm" type="submit">🔄 تحديث الحالات</button>
+    <button class="btn ghost sm" type="submit">🔄 مزامنة الحالات من المزوّد</button>
   </form>
+</div>
+<div class="tools">
+  <a class="btn sm {{ '' if not status else 'ghost' }}" href="{{ url_for('admin_orders') }}">الكل</a>
+  {% for k, v in STATUS_AR.items() %}
+    <a class="btn sm {{ '' if status == k else 'ghost' }}" href="?status={{ k }}">{{ v }}</a>
+  {% endfor %}
 </div>
 <div class="table-wrap">
   <table>
-    <thead><tr><th>#</th><th>التاريخ</th><th>الخدمة</th><th>الرابط</th><th>الكمية</th><th>التكلفة</th><th>الحالة</th></tr></thead>
+    <thead><tr><th>#</th><th>العميل</th><th>الخدمة</th><th>الرابط</th><th>الكمية</th><th>التكلفة</th><th>المزوّد</th><th>الحالة</th><th>إجراء</th></tr></thead>
     <tbody>
     {% for o in orders %}
       <tr>
-        <td>{{ o['id'] }}</td>
-        <td>{{ o['created_at']|dt }}</td>
+        <td>{{ o['id'] }}<div class="hint">{{ o['created_at']|dt }}</div></td>
+        <td>{{ o['username'] }}</td>
         <td>{{ o['service_name'] }}</td>
         <td class="link" title="{{ o['link'] }}">{{ o['link'] }}</td>
-        <td>{{ o['quantity'] }}{% if o['remains'] is not none and o['status'] in ('partial','in_progress') %}<div class="hint">متبقي {{ o['remains'] }}</div>{% endif %}</td>
-        <td>{{ o['charge']|money }}{% if o['refunded'] %}<div class="hint">اتسترجع {{ o['refunded']|money }}</div>{% endif %}</td>
+        <td>{{ o['quantity'] }}</td>
+        <td>{{ o['charge']|money }}{% if o['refunded'] %}<div class="hint">مسترجع {{ o['refunded']|money }}</div>{% endif %}</td>
+        <td>{{ o['provider_order_id'] or 'يدوي' }}{% if o['error'] %}<div class="hint">{{ o['error'] }}</div>{% endif %}</td>
         <td><span class="badge {{ o['status'] }}">{{ STATUS_AR.get(o['status'], o['status']) }}</span></td>
+        <td>
+          <form class="mini-form" method="post" action="{{ url_for('admin_order_status', oid=o['id']) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <select name="status">
+              {% for k, v in STATUS_AR.items() %}<option value="{{ k }}" {{ 'selected' if k == o['status'] }}>{{ v }}</option>{% endfor %}
+            </select>
+            <input name="remains" type="number" min="0" placeholder="متبقي" title="المتبقي (للمكتمل جزئياً)">
+            <button class="btn sm" type="submit">حفظ</button>
+          </form>
+          {% if o['status'] == 'pending' and not o['provider_order_id'] %}
+          <form class="inline" method="post" action="{{ url_for('admin_order_send', oid=o['id']) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn ghost sm" type="submit">إرسال للمزوّد</button>
+          </form>
+          {% endif %}
+        </td>
       </tr>
     {% else %}
-      <tr><td colspan="7" class="empty">لسه معملتش أي طلب. <a href="{{ url_for('new_order') }}">اعمل أول طلب</a></td></tr>
+      <tr><td colspan="9" class="empty">مفيش طلبات.</td></tr>
     {% endfor %}
     </tbody>
   </table>
 </div>
+<p class="hint mt">تغيير الحالة لـ«ملغي» أو «فشل» بيرجّع المبلغ كله للعميل تلقائي. «مكتمل جزئياً» بيرجّع بنسبة المتبقي. الاسترجاع مش بيتكرر مرتين لنفس الطلب.</p>
 {% endblock %}

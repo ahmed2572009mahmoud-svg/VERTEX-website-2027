@@ -1,0 +1,9 @@
+<div class="subnav">
+  {% set ep = request.endpoint or '' %}
+  <a href="{{ url_for('admin_dashboard') }}" class="{{ 'active' if ep == 'admin_dashboard' }}">الرئيسية</a>
+  <a href="{{ url_for('admin_deposits') }}" class="{{ 'active' if ep == 'admin_deposits' }}">طلبات الشحن</a>
+  <a href="{{ url_for('admin_orders') }}" class="{{ 'active' if ep == 'admin_orders' }}">الطلبات</a>
+  <a href="{{ url_for('admin_services') }}" class="{{ 'active' if ep.startswith('admin_service') }}">الخدمات</a>
+  <a href="{{ url_for('admin_users') }}" class="{{ 'active' if ep == 'admin_users' }}">العملاء</a>
+  <a href="{{ url_for('admin_settings') }}" class="{{ 'active' if ep == 'admin_settings' }}">الإعدادات</a>
+</div>

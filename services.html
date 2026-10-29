@@ -1,31 +1,114 @@
 {% extends "base.html" %}
-{% block title %}الخدمات - {{ site_name }}{% endblock %}
+{% block title %}إدارة الخدمات - {{ site_name }}{% endblock %}
 {% block content %}
-<h1>الخدمات والأسعار</h1>
-<p class="sub">الأسعار لكل 1000 وحدة.</p>
-{% for cat, items in grouped.items() %}
-  <h3 class="cat">{{ cat }}</h3>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>#</th><th>الخدمة</th><th>السعر / 1000</th><th>الحد الأدنى</th><th>الحد الأقصى</th></tr></thead>
-      <tbody>
-      {% for s in items %}
-        <tr>
-          <td>{{ s['id'] }}</td>
-          <td>{{ s['name'] }}{% if s['description'] %}<div class="hint">{{ s['description'] }}</div>{% endif %}</td>
-          <td>{{ s['rate']|money }} {{ currency }}</td>
-          <td>{{ s['min_qty'] }}</td>
-          <td>{{ s['max_qty'] }}</td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
+{% include "admin/_nav.html" %}
+<div class="tools" style="justify-content:space-between">
+  <h1>الخدمات</h1>
+  <div>
+    <a class="btn ghost sm" href="{{ url_for('admin_services_import') }}">استيراد من المزوّد</a>
+    <a class="btn sm" href="{{ url_for('admin_service_new') }}">+ خدمة جديدة</a>
   </div>
+</div>
+<div class="tools" style="gap:8px; flex-wrap:wrap; margin:12px 0">
+  <input id="serviceSearch" type="search" placeholder="ابحث برقم الخدمة..." inputmode="numeric" style="max-width:280px" aria-label="البحث برقم الخدمة">
+  <span id="searchCount" class="muted" style="font-size:.9em"></span>
+</div>
+<form id="bulkDeleteForm" method="post" action="{{ url_for('admin_services_bulk_delete') }}" class="tools" style="gap:8px; flex-wrap:wrap; margin:12px 0" onsubmit="return confirmBulkDelete(event)">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button class="btn danger sm" type="submit" name="action" value="selected">حذف المحدد</button>
+  <button class="btn danger sm" type="submit" name="action" value="all">حذف كل الخدمات</button>
+  <span class="muted" style="font-size:.9em">استخدم مربع التحديد بجوار كل قسم لتحديد خدماته فقط.</span>
+</form>
+{% for category, category_services in services|groupby('category') %}
+  <section class="service-category-group" style="margin:18px 0">
+    <div class="tools" style="justify-content:space-between; gap:10px; flex-wrap:wrap; padding:10px 0">
+      <h2 style="margin:0">{{ category }} <span class="muted" style="font-size:.75em">({{ category_services|length }})</span></h2>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" class="select-category" aria-label="تحديد كل خدمات {{ category }}">
+        تحديد خدمات {{ category }} فقط
+      </label>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>تحديد</th><th>#</th><th>القسم</th><th>الاسم</th><th>السعر/1000</th><th>الحدود</th><th>رقم عند المزوّد</th><th>مفعّلة</th><th></th></tr></thead>
+        <tbody>
+        {% for s in category_services %}
+          <tr class="service-row" data-service-id="{{ s['id'] }}">
+            <td><input type="checkbox" class="service-checkbox" name="service_ids" value="{{ s['id'] }}" form="bulkDeleteForm" aria-label="تحديد {{ s['name'] }}"></td>
+            <td>{{ s['id'] }}</td><td>{{ s['category'] }}</td><td>{{ s['name'] }}</td>
+            <td>{{ s['rate']|money }}</td><td>{{ s['min_qty'] }} - {{ s['max_qty'] }}</td>
+            <td dir="ltr">{{ s['provider_service_id'] or 'يدوي' }}</td>
+            <td>{{ '✅' if s['is_active'] else '⛔' }}</td>
+            <td>
+              <a class="btn ghost sm" href="{{ url_for('admin_service_edit', sid=s['id']) }}">تعديل</a>
+              <form class="inline" method="post" action="{{ url_for('admin_service_delete', sid=s['id']) }}" onsubmit="return confirm('حذف الخدمة؟ الطلبات القديمة هتفضل محفوظة.')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn danger sm" type="submit">حذف</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
 {% else %}
-  <div class="card empty">مفيش خدمات متاحة حالياً.</div>
+  <div class="card empty">مفيش خدمات.</div>
 {% endfor %}
-<p class="mt">
-  {% if me %}<a class="btn" href="{{ url_for('new_order') }}">اطلب دلوقتي</a>
-  {% else %}<a class="btn" href="{{ url_for('register') }}">سجّل واطلب</a>{% endif %}
-</p>
+<script>
+(function () {
+  const groups = Array.from(document.querySelectorAll('.service-category-group'));
+  const search = document.getElementById('serviceSearch');
+  const count = document.getElementById('searchCount');
+  const boxes = Array.from(document.querySelectorAll('.service-checkbox'));
+
+  groups.forEach(function (group) {
+    const selectCategory = group.querySelector('.select-category');
+    const groupBoxes = Array.from(group.querySelectorAll('.service-checkbox'));
+    selectCategory.addEventListener('change', function () {
+      groupBoxes.forEach(function (box) {
+        if (box.closest('tr').style.display !== 'none') box.checked = selectCategory.checked;
+      });
+    });
+    groupBoxes.forEach(function (box) {
+      box.addEventListener('change', function () {
+        const visible = groupBoxes.filter(function (item) { return item.closest('tr').style.display !== 'none'; });
+        selectCategory.checked = visible.length > 0 && visible.every(function (item) { return item.checked; });
+        selectCategory.indeterminate = visible.some(function (item) { return item.checked; }) && !selectCategory.checked;
+      });
+    });
+  });
+
+  search.addEventListener('input', function () {
+    const q = search.value.trim();
+    let visibleCount = 0;
+    groups.forEach(function (group) {
+      let groupVisible = 0;
+      group.querySelectorAll('.service-row').forEach(function (row) {
+        const show = !q || row.dataset.serviceId.includes(q);
+        row.style.display = show ? '' : 'none';
+        if (show) { groupVisible++; visibleCount++; }
+      });
+      group.style.display = groupVisible ? '' : 'none';
+      const selectCategory = group.querySelector('.select-category');
+      const visibleBoxes = Array.from(group.querySelectorAll('.service-checkbox')).filter(function (box) { return box.closest('tr').style.display !== 'none'; });
+      selectCategory.checked = visibleBoxes.length > 0 && visibleBoxes.every(function (box) { return box.checked; });
+      selectCategory.indeterminate = visibleBoxes.some(function (box) { return box.checked; }) && !selectCategory.checked;
+    });
+    count.textContent = q ? ('عدد النتائج: ' + visibleCount) : '';
+  });
+})();
+function confirmBulkDelete(event) {
+  const action = event.submitter ? event.submitter.value : 'selected';
+  if (action === 'all') {
+    return confirm('متأكد إنك عاوز تحذف كل الخدمات؟ لا يمكن التراجع عن الحذف، لكن الطلبات القديمة ستظل محفوظة.');
+  }
+  const selected = Array.from(document.querySelectorAll('.service-checkbox:checked'));
+  if (!selected.length) {
+    alert('حدد خدمة واحدة على الأقل.');
+    return false;
+  }
+  return confirm('متأكد إنك عاوز تحذف ' + selected.length + ' خدمة؟ الطلبات القديمة ستظل محفوظة.');
+}
+</script>
 {% endblock %}

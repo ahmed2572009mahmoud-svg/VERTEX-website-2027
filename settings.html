@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}الإعدادات - {{ site_name }}{% endblock %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<h1>الإعدادات</h1>
+<form method="post" class="grid g2 mt">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="card">
+    <h2>الموقع</h2>
+    <label>اسم الموقع</label><input name="site_name" required value="{{ S.site_name }}">
+    <label>العملة</label><input name="currency" required value="{{ S.currency }}">
+    <label>الشعار الفرعي (الصفحة الرئيسية)</label><input name="tagline" value="{{ S.tagline }}">
+    <label>وسيلة التواصل للدعم</label><input name="support_contact" value="{{ S.support_contact }}" placeholder="واتساب / تليجرام">
+  </div>
+  <div class="card">
+    <h2>الدفع</h2>
+    <label>تعليمات الدفع (بتظهر للعميل)</label>
+    <textarea name="payment_instructions" rows="6">{{ S.payment_instructions }}</textarea>
+    <div class="hint">حط أرقام محافظك الحقيقية هنا بدل الأمثلة.</div>
+    <label>أقل مبلغ للشحن</label><input name="min_deposit" type="number" min="1" step="1" value="{{ S.min_deposit }}">
+  </div>
+  <div class="card" style="grid-column:1/-1">
+    <h2>المزوّد (اختياري)</h2>
+    <p class="muted">أي مزوّد بيدعم واجهة SMM API القياسية (actions: services / add / status / balance).</p>
+    <div class="row">
+      <div><label>رابط الـ API</label><input name="provider_url" dir="ltr" value="{{ S.provider_url }}" placeholder="https://provider.com/api/v2"></div>
+      <div><label>مفتاح الـ API {% if has_key %}(محفوظ — سيبه فاضي عشان يفضل زي ما هو){% endif %}</label>
+        <input name="provider_key" type="password" dir="ltr" autocomplete="off" placeholder="{{ '••••••••' if has_key else '' }}"></div>
+    </div>
+    {% if has_key %}<div class="check"><input type="checkbox" id="clear_key" name="clear_key"><label for="clear_key">امسح المفتاح المحفوظ</label></div>{% endif %}
+  </div>
+  <div style="grid-column:1/-1"><button class="btn" type="submit">حفظ الإعدادات</button></div>
+</form>
+{% endblock %}

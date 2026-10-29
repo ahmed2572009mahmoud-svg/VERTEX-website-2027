@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ 'خدمة جديدة' if new else 'تعديل خدمة' }} - {{ site_name }}{% endblock %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<div class="narrow card" style="width:min(640px,100%)">
+  <h1>{{ 'خدمة جديدة' if new else 'تعديل الخدمة' }}</h1>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row">
+      <div><label>القسم</label><input name="category" required maxlength="60" value="{{ s.get('category', '') }}" placeholder="إنستجرام"></div>
+      <div><label>ترتيب العرض</label><input name="sort" type="number" value="{{ s.get('sort', 0) }}"></div>
+    </div>
+    <label>اسم الخدمة</label>
+    <input name="name" required maxlength="150" value="{{ s.get('name', '') }}">
+    <label>وصف (اختياري)</label>
+    <textarea name="description" maxlength="500">{{ s.get('description', '') }}</textarea>
+    <div class="row">
+      <div><label>السعر لكل 1000 ({{ currency }})</label><input name="rate" type="number" step="0.0001" min="0.0001" required value="{{ s.get('rate', '') }}"></div>
+      <div><label>الحد الأدنى</label><input name="min_qty" type="number" min="1" required value="{{ s.get('min_qty', 100) }}"></div>
+      <div><label>الحد الأقصى</label><input name="max_qty" type="number" min="1" required value="{{ s.get('max_qty', 10000) }}"></div>
+    </div>
+    <label>رقم الخدمة عند المزوّد (اتركه فاضي للتنفيذ اليدوي)</label>
+    <input name="provider_service_id" dir="ltr" value="{{ s.get('provider_service_id') or '' }}">
+    <div class="check"><input type="checkbox" id="is_active" name="is_active" {{ 'checked' if s.get('is_active') }}><label for="is_active">مفعّلة</label></div>
+    <button class="btn block" type="submit">حفظ</button>
+  </form>
+</div>
+{% endblock %}

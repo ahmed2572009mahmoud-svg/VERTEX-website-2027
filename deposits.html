@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}طلبات الشحن - {{ site_name }}{% endblock %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<h1>طلبات الشحن</h1>
+<div class="tools">
+  <a class="btn sm {{ '' if status == 'pending' else 'ghost' }}" href="?status=pending">قيد المراجعة</a>
+  <a class="btn sm {{ '' if status == 'approved' else 'ghost' }}" href="?status=approved">مقبولة</a>
+  <a class="btn sm {{ '' if status == 'rejected' else 'ghost' }}" href="?status=rejected">مرفوضة</a>
+  <a class="btn sm {{ '' if status == 'all' else 'ghost' }}" href="?status=all">الكل</a>
+</div>
+<p class="hint">اتأكد إن الفلوس وصلت فعلاً على محفظتك قبل ما توافق.</p>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>#</th><th>التاريخ</th><th>العميل</th><th>المبلغ</th><th>الطريقة</th><th>المرجع</th><th>الحالة</th><th></th></tr></thead>
+    <tbody>
+    {% for d in deposits %}
+      <tr>
+        <td>{{ d['id'] }}</td><td>{{ d['created_at']|dt }}</td><td>{{ d['username'] }}</td>
+        <td><b>{{ d['amount']|money }}</b></td><td>{{ d['method'] }}</td><td class="link">{{ d['reference'] }}</td>
+        <td><span class="badge {{ d['status'] }}">{{ {'pending':'قيد المراجعة','approved':'مقبول','rejected':'مرفوض'}[d['status']] }}</span></td>
+        <td>
+          {% if d['status'] == 'pending' %}
+          <form class="inline" method="post" action="{{ url_for('admin_deposit_review', did=d['id'], action='approve') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn ok sm" type="submit">قبول</button>
+          </form>
+          <form class="inline" method="post" action="{{ url_for('admin_deposit_review', did=d['id'], action='reject') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn danger sm" type="submit">رفض</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="8" class="empty">مفيش طلبات.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

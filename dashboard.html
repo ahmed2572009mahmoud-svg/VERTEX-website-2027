@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}لوحة الأدمن - {{ site_name }}{% endblock %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<h1>لوحة التحكم</h1>
+
+<div class="grid g4 mt">
+  <div class="card stat"><div class="n">{{ stats.pending_deposits }}</div><div class="l">شحن بانتظار المراجعة</div></div>
+  <div class="card stat"><div class="n">{{ stats.manual_orders }}</div><div class="l">طلبات يدوية بانتظارك</div></div>
+  <div class="card stat"><div class="n">{{ stats.active_orders }}</div><div class="l">طلبات نشطة</div></div>
+  <div class="card stat"><div class="n">{{ stats.users }}</div><div class="l">العملاء</div></div>
+  <div class="card stat"><div class="n">{{ stats.orders }}</div><div class="l">إجمالي الطلبات</div></div>
+  <div class="card stat"><div class="n">{{ stats.revenue|money }}</div><div class="l">المبيعات ({{ currency }})</div></div>
+  <div class="card stat"><div class="n">{{ stats.deposited|money }}</div><div class="l">إجمالي الشحن المقبول</div></div>
+  <div class="card stat"><div class="n">{{ stats.balances|money }}</div><div class="l">أرصدة العملاء</div></div>
+</div>
+
+<div class="card mt">
+  <h2>المزوّد (Provider)</h2>
+  {% if provider_ok %}
+    <p class="muted">مضبوط. الطلبات للخدمات المربوطة بتتبعت أوتوماتيك.</p>
+    <form method="post" action="{{ url_for('admin_provider_balance') }}" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn ghost sm" type="submit">عرض رصيدي عند المزوّد</button>
+    </form>
+    <a class="btn ghost sm" href="{{ url_for('admin_services_import') }}">استيراد الخدمات</a>
+  {% else %}
+    <p class="muted">لسه مفيش مزوّد مضبوط، فالطلبات هتفضل <b>يدوية</b> وتنفّذها بنفسك من صفحة الطلبات. اربط مزوّد من الإعدادات لما تكون جاهز.</p>
+    <a class="btn sm" href="{{ url_for('admin_settings') }}">ضبط المزوّد</a>
+  {% endif %}
+</div>
+{% endblock %}
